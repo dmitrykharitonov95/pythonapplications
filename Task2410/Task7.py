@@ -109,24 +109,29 @@ def sunandco(type="verlet"):
     a=np.zeros(6)
     b=np.zeros(6)
     c=np.zeros(6)
+    d=np.zeros(6)
+    a[0]=-1.496*10 ** 11
     a[1]=-384467000
     a[3]=1022
     a[4]=-29.783*10 **3
+    b[0]=-1.496*10 ** 11
     b[4]=-29.783*10 **3
-    c[0]=1.496*10 ** 11
+    d[0]=9.5*1.496*10 ** 11
+    d[4]=9690
     #a[0]=1
     #a[4]=1
     #lst=[]
     #lst.append(a)
     #lst.append(b)
-    lst=np.zeros((3,6))
+    lst=np.zeros((4,6))
     lst[0,:]=a
     lst[1,:]=b
     lst[2,:]=c
+    lst[3,:]=d
     t=time.time()
-    lstm=[7.3 * 10 ** 22, 6*10 ** 24, 2* 10 **30 ]
+    lstm=[7.3 * 10 ** 22, 6*10 ** 24, 2* 10 **30, 5.6846*10 ** 26]
     #lstm=[1, 1*10 ** 11]
-    res = verlet(lst,lstm, 12000000, 12*2592000, type)
+    res = verlet(lst,lstm, 29*1200, 29*365.025*24*3600, type)
     #res=verlet(lst,lstm,10000,1,"verlet-threading")
     print(time.time()-t)
     N=len(res)
@@ -135,8 +140,15 @@ def sunandco(type="verlet"):
     y1=res[:,0,1]
     x2=res[:,1,0]
     y2=res[:,1,1]
-    plt.plot(x1,y1)
-    plt.plot(x2,y2,color="red")
-    plt.show()
+    x3=res[:,2,0]
+    y3=res[:,2,1]
+    x4=res[:,3,0]
+    y4=res[:,3,1]
+    #plt.plot(x1,y1)
+    #plt.plot(x2,y2,color="red")
+    #plt.plot(x3,y3,color="yellow")
+    #plt.plot(x4,y4, color="pink")
+    #plt.show()
+    return res
 
-sunandco("scipy")
+#sunandco("verlet")

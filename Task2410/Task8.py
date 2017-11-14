@@ -119,6 +119,8 @@ def recoord(x,y,asize,t):
         c=np.linalg.solve(A,B)
         f1=c[0]*x**2+c[1]*x
         f2=c[0]*y**2+c[1]*y
+        #mx=1.3*1.496*10 ** 11
+        #print(c[0]*mx**2+c[1]*mx)
     return f1,f2
 def Coord(lst,t, asize):
     N=len(lst)
@@ -165,6 +167,8 @@ def Evaluate():
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet")
     elif radio.get()==3:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-threading")
+    elif radio.get()==3:
+        res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-multiprocessing")
     N=600
     M=len(lst)
     L=int(len(res)/N)

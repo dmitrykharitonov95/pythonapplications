@@ -8,6 +8,7 @@ import threading
 import time
 import multiprocessing
 from multiprocessing import Process, freeze_support, set_start_method, Queue, Array, Lock
+import cverlet00
 
 def f(y,t,lstm):
     G=6.67 * 10 ** (-11)
@@ -50,6 +51,15 @@ def calc3_m(a,lst,lstm,i,N):
             r2=np.array(lst[6*i:6*i+3])
             a[i]+=G*lstm[j]*(r1-r2)/nlg.norm(r1-r2,2) ** 3
 
+def acceleration2(lst, lstm):
+    G=6.67 * 10 ** (-11)
+    N=lst.shape[0]
+    a=np.zeros([N,3])
+    for i in range(0,N):
+        for j in range(0,N):
+            if i!=j:
+                a[i]+=G*lstm[j]*(lst[j,0:3]-lst[i,0:3])/nlg.norm(lst[j,0:3]-lst[i,0:3],2) ** 3
+    return a
 def acceleration(lst,lstm,i):
     N=len(lst)
     if (i==-1):
@@ -127,12 +137,13 @@ def verlet(lst, lstm, M, T, type):
     res=np.zeros((M,N,6))
     res[0]=copy.copy(lst)
     if type=="verlet":
-        a=acceleration(lst,lstm,-1)
+        a=acceleration2(lst,lstm)
+        print(a.max())
         for i in range(1,M):
             lst2=np.zeros((N,6))
             for j in range(0,N):
                 calc1(lst,lst2,a[j],tau,j)
-            b=acceleration(lst2,lstm,-1)
+            b=acceleration2(lst2,lstm)
             for j in range(0,N):
                 calc2(lst,lst2,a[j],b[j],tau,j)
             lst=copy.copy(lst2)
@@ -185,6 +196,14 @@ def verlet(lst, lstm, M, T, type):
             elem.join()
         #boss.join()
         res=np.array(A1[:]).reshape((M,N,6))
+    elif type=="verlet-cython1":
+        print("YES!")
+        res=cverlet00.cverlet00(lst,lstm,M,T)
+        return res;
+    elif type=="verlet-cython2":
+        print("YES!")
+        res=cverlet00.cverlet01(lst,lstm,M,T)
+        return res;
     elif type=="scipy":
         t=np.linspace(0,T,M)
         res2=scipy.integrate.odeint(f,lst.reshape((6*N)),t,args=(lstm,))
@@ -209,13 +228,13 @@ def sunandco(type="verlet"):
     #lst=[]
     #lst.append(a)
     #lst.append(b)
-    lst=np.zeros((4,6))
+    lst=np.zeros((4,6), dtype=np.float32)
     lst[0,:]=a
     lst[1,:]=b
     lst[2,:]=c
     lst[3,:]=d
     t=time.time()
-    lstm=[7.3 * 10 ** 22, 6*10 ** 24, 2* 10 **30, 5.6846*10 ** 26]
+    lstm=np.array([7.3 * 10 ** 22, 6*10 ** 24, 2* 10 **30, 5.6846*10 ** 26], dtype=np.float32);
     #lstm=[1, 1*10 ** 11]
     res = verlet(lst,lstm, 29*1200, 29*365.025*24*3600, type)
     #res=verlet(lst,lstm,1000,1,type)
@@ -238,4 +257,4 @@ def sunandco(type="verlet"):
     return res
 
 if __name__ == '__main__':
-    sunandco("scipy")
+    sunandco("verlet-cython")

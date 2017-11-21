@@ -124,7 +124,7 @@ def recoord(x,y,asize,t):
     return f1,f2
 def Coord(lst,t, asize):
     N=len(lst)
-    arr=np.zeros((N,6))
+    arr=np.zeros((N,6), dtype=np.float32)
     lstm=[0]*N
     me=asize/50
     ms=asize/20
@@ -160,15 +160,20 @@ def Coord(lst,t, asize):
 
 def Evaluate():
     global f2, canvas2, asize, a2, lst
-    arr, lstm = Coord(lst,7,asize)
+    arr, lstm2 = Coord(lst,7,asize)
+    lstm=np.array(lstm2, dtype=np.float32)
     if radio.get()==1:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"scipy")
     elif radio.get()==2:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet")
     elif radio.get()==3:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-threading")
-    elif radio.get()==3:
+    elif radio.get()==4:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-multiprocessing")
+    elif radio.get()==5:
+        res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-cython1")
+    elif radio.get()==6:
+        res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-cython2")
     N=600
     M=len(lst)
     L=int(len(res)/N)
@@ -296,8 +301,10 @@ Radio4=Radiobutton(child2, text="verlet-multiprocessing", value=4, variable=radi
 Radio4.grid(row=4, column=1)
 Radio5=Radiobutton(child2, text="verlet-cython", value=5, variable=radio)
 Radio5.grid(row=5, column=1)
-Radio5=Radiobutton(child2, text="verlet-opencl", value=6, variable=radio)
-Radio5.grid(row=6, column=1)
+Radio6=Radiobutton(child2, text="verlet-cython-tmw", value=6, variable=radio)
+Radio6.grid(row=6, column=1)
+Radio7=Radiobutton(child2, text="verlet-opencl", value=7, variable=radio)
+Radio7.grid(row=7, column=1)
 
 f2 = Figure(figsize=(5, 4), dpi=100)
 a2 = f2.add_subplot(111)
@@ -307,5 +314,5 @@ canvas2 = backend_tkagg.FigureCanvasTkAgg(f2, master=child2)
 canvas2.show()
 canvas2.get_tk_widget().grid(column=2)
 ButEval=Button(child2,text="Solar",command=Evaluate)
-ButEval.grid(row=7, column=1)
+ButEval.grid(row=8, column=1)
 root.mainloop()

@@ -135,8 +135,8 @@ def Coord(lst,t, asize):
     for i in range(0,N):
         lstm[i]=(c[0]*(lst[i]._radius)**3+c[1]*lst[i]._radius**2+c[2]*lst[i]._radius)*10 **24
     print(lstm)
-    A=np.array([[(asize/t)**2,asize/t], [asize**2,asize]], dtype=float)
-    b=np.array([1.496*10 ** 11, 9.5*1.496*10 ** 11])
+    A=np.array([[(asize/t)**2,asize/t], [(0.96*asize)**2,0.96*asize]], dtype=np.float32)
+    b=np.array([1.496, 9.5*1.496])
     c=np.linalg.solve(A,b)
     ns=np.array(lstm).argmax()
     arr[ns,0]=c[0]*lst[ns]._x**2+c[1]*lst[ns]._x
@@ -147,7 +147,10 @@ def Coord(lst,t, asize):
             arr[i,1]=c[0]*lst[i]._y**2+c[1]*lst[i]._y-arr[ns,1]
     arr[ns,0]=0
     arr[ns,1]=0
-    A=np.array([[1.496*10 ** 11,1], [9.5*1.496*10 ** 11,1]], dtype=float)
+    for i in range(0,N):
+        arr[i,0]*=10**11
+        arr[i,1]*=10**11
+    A=np.array([[1.496*10 ** 11,1], [9.5*1.496*10 ** 11,1]], dtype=np.float32)
     b=np.array([1/(29.783*10 **3), 1/9690])
     c=np.linalg.solve(A,b)
     for i in range(0,N):
@@ -157,11 +160,12 @@ def Coord(lst,t, asize):
             arr[i,3]=-v*arr[i,1]/r
             arr[i,4]=v*arr[i,0]/r
     return arr, lstm
-
 def Evaluate():
-    global f2, canvas2, asize, a2, lst
+    global f2, canvas2, asize, a2, lst, TimD
     arr, lstm2 = Coord(lst,7,asize)
+    print(arr)
     lstm=np.array(lstm2, dtype=np.float32)
+    t=time.time()
     if radio.get()==1:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"scipy")
     elif radio.get()==2:
@@ -174,6 +178,9 @@ def Evaluate():
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-cython1")
     elif radio.get()==6:
         res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-cython2")
+    elif radio.get()==7:
+        res=Task7.verlet(arr,lstm, 29*1200, 29*365.025*24*3600,"verlet-opencl")
+    TimD['text']=time.time()-t
     N=600
     M=len(lst)
     L=int(len(res)/N)
@@ -187,17 +194,6 @@ def Evaluate():
             x,y=recoord(res[i*L][j][0],res[i*L][j][1],asize,7)
             crcl=mpb.patches.Circle((x,y), radius=lst[j]._radius, fill=True, color=lst[j]._color)
             f2.gca().add_patch(crcl)
-            ##crcl=mpb.patches.Circle((res[(i-1)*L][1][0]*2*asize/(3*10 **11)-asize,res[(i-1)*L][1][1]*2*asize/(3*10 **11)), radius=2, fill=True, color="white")
-            ##f2.gca().add_patch(crcl)
-            ##crcl=mpb.patches.Circle((res[(i-1)*L][2][0]*2*asize/(3*10 **11)-asize,res[(i-1)*L][2][1]*2*asize/(3*10 **11)), radius=10, fill=True, color="white")
-            ##f2.gca().add_patch(crcl)
-            #x,y=recoord(res[i*L][2][0],res[i*L][2][1],asize,7)
-            #crcl=mpb.patches.Circle((x,y), radius=10, fill=True, color="yellow")
-            #f2.gca().add_patch(crcl)
-            #x,y=recoord(res[i*L][3][0],res[i*L][3][1],asize,7)
-            ##print(x,y)
-            #crcl=mpb.patches.Circle((x,y), radius=5, fill=True, color="#ffe375")
-            #f2.gca().add_patch(crcl)
         canvas2.show()
         canvas2.get_tk_widget().update()
         #time.sleep(0.01)
@@ -315,4 +311,8 @@ canvas2.show()
 canvas2.get_tk_widget().grid(column=2)
 ButEval=Button(child2,text="Solar",command=Evaluate)
 ButEval.grid(row=8, column=1)
+TimDT = Label(child2,  text="Time")
+TimDT.grid(row=9, column=1)
+TimD = Label(child2)
+TimD.grid(row=9, column=2)
 root.mainloop()
